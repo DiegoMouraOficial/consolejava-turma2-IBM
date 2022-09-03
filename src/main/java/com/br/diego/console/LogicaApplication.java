@@ -6,33 +6,135 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-//import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import com.br.diego.console.models.Aluno;
 
 @SpringBootApplication
 public class LogicaApplication {
 
-	/**
-	 * @param args
-	 * @throws IOException
-	 */
-	public static void main(String[] args) throws IOException {
+    private static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    private static List<Aluno> alunos = new ArrayList<>();
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) throws IOException, NumberFormatException, InterruptedException {
+        while (true) {
+            limparTela();
 
-		System.out.println("=====[Turma 2 IBM - Aulas Gama Academy]=====");
+            System.out.println("===== [ Cadastro dos alunos ] =======");
+            System.out.println("Qual opção você deseja?");
+            System.out.println("1 - Cadastrar aluno");
+            System.out.println("2 - Mostrar relatório");
+            System.out.println("3 - sair");
 
-		List<String> nomes = new ArrayList<>();
-		for (int i = 1; i <= 5; i++) {
-			System.out.println("Digite o seu nome: " + i + " : ");
-			String nome = reader.readLine();
-			nomes.add(nome);
-		}
-		for (int i = 0; i < nomes.size(); i++) {
-			System.out.println("O nome " + (i + 1) + " digitado foi: " + nomes.get(i));
-		}
+            int opcao = 0;
 
-		// SpringApplication.run(LogicaApplication.class, args);
+            try {
+                opcao = Integer.parseInt(reader.readLine());
+            } catch (Exception e) {
+            }
 
-	}
+            limparTela();
+
+            var sair = false;
+            switch (opcao) {
+                case 1:
+                    cadastroAluno();
+                    break;
+                case 2:
+                    mostrarAlunos();
+                    break;
+                case 3:
+                    sair = true;
+                    break;
+                default:
+                    opcaoInvalida();
+                    break;
+            }
+
+            if (sair)
+                break;
+        }
+
+        // SpringApplication.run(LogicaApplication.class, args);
+    }
+
+    private static void limparTela() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    private static void opcaoInvalida() throws IOException, NumberFormatException, InterruptedException {
+        mensagem("Opção inválida");
+    }
+
+    private static void capturaNotasAluno(Aluno aluno) throws NumberFormatException, IOException, InterruptedException {
+        System.out.println("Digite a nota do(a) " + aluno.getNome());
+        if (aluno.getNotas() == null)
+            aluno.setNotas(new ArrayList<Float>());
+
+        try {
+            aluno.getNotas().add(Float.parseFloat(reader.readLine()));
+        } catch (Exception e) {
+            mensagem("Nota inválida");
+            capturaNotasAluno(aluno);
+        }
+
+        try {
+            System.out.println("Digite 1 para cadastrar mais notas ou 0 para finalizar o cadaastro");
+            int opcao = Integer.parseInt(reader.readLine());
+            if (opcao == 1)
+                capturaNotasAluno(aluno);
+            return;
+        } catch (Exception e) {
+            mensagem("Opção inválida, iniciando novo cadastro de nota");
+            capturaNotasAluno(aluno);
+        }
+    }
+
+    private static void mensagem(String string) throws InterruptedException {
+        limparTela();
+        System.out.println(string);
+        espera(2);
+        limparTela();
+    }
+
+    private static void espera(int secconds) throws InterruptedException {
+        Thread.sleep(secconds * 1000);
+    }
+
+    private static void mostrarAlunos() throws InterruptedException {
+        if (alunos.size() == 0) {
+            mensagem("Nenhum aluno cadastrado");
+            return;
+        }
+
+        System.out.println("======== [ Relatório de alunos ] ========");
+        for (Aluno aluno : alunos) {
+            System.out.println("Nome: " + aluno.getNome());
+            String notas = "";
+            for (float nota : aluno.getNotas()) {
+                notas += nota + ", ";
+            }
+            System.out.println("Notas: " + notas);
+            System.out.println("Média: " + aluno.media());
+            System.out.println("Situação: " + aluno.situacao());
+            System.out.println("-------------------------------");
+        }
+
+        espera(8);
+        limparTela();
+    }
+
+    private static void cadastroAluno() throws NumberFormatException, IOException, InterruptedException {
+        var aluno = new Aluno();
+        System.out.println("Digite o nome do aluno");
+        aluno.setNome(reader.readLine());
+
+        capturaNotasAluno(aluno);
+
+        alunos.add(aluno);
+
+        mensagem("Aluno cadastrado com sucesso!");
+    }
+
 }
